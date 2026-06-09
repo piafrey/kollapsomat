@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Der Kollaps-o-mat</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #1a1a1a;
+    --white: #faf8f5;
+    --yellow: #f0c800;
+    --red: #b82020;
+    --gray: #e8e4df;
+    --strip-h: 200px;
+    --half: 220ms;
+  }
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--white);
+    color: var(--black);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 0 0 80px;
+    overflow-x: hidden;
+  }
+
+  /* ── Warning stripe ── */
+  .warnstreifen {
+    width: 100%; height: 14px;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--yellow) 0px, var(--yellow) 12px,
+      var(--black) 12px, var(--black) 24px
+    );
+  }
+
+  /* ── Alert bar ── */
+  .alert-bar {
+    width: 100%;
+    background: var(--black);
+    color: #ccc;
+    text-align: center;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 6px 16px;
+  }
+
+  .bahn-bar {
+    width: 100%;
+    background: var(--white);
+    color: #aaa;
+    text-align: center;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--gray);
+  }
+
+  /* ── Inner ── */
+  .inner { width: 100%; max-width: 900px; padding: 40px 24px 0; }
+
+  /* ── Header ── */
+  header { margin-bottom: 28px; }
+
+  .warning-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--yellow);
+    color: var(--black);
+    font-size: 10px; font-weight: 900;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 9px; margin-bottom: 12px;
+  }
+  .warning-badge::before { content: "⚠"; font-size: 11px; }
+
+  h1 {
+    font-size: clamp(30px, 6vw, 58px);
+    font-weight: 900; letter-spacing: -0.03em; line-height: 1;
+    margin-bottom: 8px;
+    border-bottom: 3px solid var(--black);
+    padding-bottom: 12px;
+  }
+  h1 span { color: var(--red); }
+  .subtitle { font-size: 14px; color: #666; margin-top: 8px; }
+
+  /* ── Info line (not buttons) ── */
+  .info-line {
+    margin: 20px 0 30px;
+    font-size: 11px; color: #888;
+    letter-spacing: 0.04em;
+    line-height: 1.8;
+    border-left: 3px solid var(--yellow);
+    padding-left: 12px;
+  }
+  .info-line strong { color: var(--black); font-weight: 700; }
+
+  /* ── Flipbook ── */
+  .flipbook-wrap { width: 100%; position: relative; }
+
+  /* ── Sticker ── */
+  .sticker {
+    position: absolute;
+    bottom: -44px;
+    left: 0;
+    z-index: 20;
+    background: var(--yellow);
+    color: var(--black);
+    font-size: 11px; font-weight: 900;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 7px 11px 6px;
+    line-height: 1.3;
+    transform: rotate(-2deg);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .flipbook {
+    display: flex;
+    border: 2px solid var(--black);
+    border-bottom: none;
+  }
+  .strip {
+    flex: 1; min-width: 0;
+    border-right: 2px solid var(--black);
+    cursor: pointer; position: relative;
+    height: var(--strip-h); overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--white);
+  }
+  .strip:last-child { border-right: none; }
+  .strip:hover { background: #f2ede6; }
+
+  .hinge {
+    position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--yellow) 0px, var(--yellow) 10px,
+      var(--black) 10px, var(--black) 20px
+    );
+    z-index: 10; pointer-events: none;
+  }
+
+  .strip-text {
+    font-size: clamp(11px, 1.35vw, 14px);
+    font-weight: 400; line-height: 1.5;
+    color: var(--black); text-align: center;
+    padding: 18px 12px 12px;
+  }
+
+  .strip-btns {
+    display: flex;
+    border: 2px solid var(--black);
+    border-top: none; border-bottom: none;
+  }
+  .strip-btn {
+    flex: 1; font-family: inherit; font-size: 15px; padding: 9px;
+    border: none; border-right: 2px solid var(--black);
+    background: var(--white); color: #bbb; cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .strip-btn:last-child { border-right: none; }
+  .strip-btn:hover { background: #f2ede6; color: var(--black); }
+  .strip-btn:active { background: var(--yellow); color: var(--black); }
+
+  .flipbook-bottom-border { width: 100%; height: 2px; background: var(--black); }
+
+  /* ── Controls ── */
+  .controls { margin-top: 28px; display: flex; justify-content: center; }
+  .neue-btn {
+    font-family: inherit; font-size: 12px; font-weight: 900;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 12px 36px;
+    border: 2px solid var(--black);
+    background: var(--black); color: var(--white);
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .neue-btn:hover { background: var(--red); border-color: var(--red); }
+
+  /* ── Credits ── */
+  .credits {
+    width: 100%; margin-top: 44px;
+    border-top: 1px solid var(--gray);
+    padding-top: 14px;
+    font-size: 11px; color: #aaa;
+    display: flex; justify-content: space-between;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    flex-wrap: wrap; gap: 6px;
+  }
+
+  @media (max-width: 560px) {
+    .flipbook { flex-direction: column; border-bottom: 2px solid var(--black); }
+    .strip { border-right: none; border-bottom: 2px solid var(--black); height: 130px; }
+    .strip:last-child { border-bottom: none; }
+    .strip-btns { flex-direction: column; }
+    .strip-btn { border-right: none; border-top: 2px solid var(--black); }
+  }
+</style>
+</head>
+<body>
+
+<div class="warnstreifen"></div>
+<div class="bahn-bar">Mit freundlicher Unterstützung der Deutschen Bahn</div>
+
+<div class="inner">
+
+  <header>
+    <div class="warning-badge">Warnstufe: Eskaliert</div>
+    <h1>Der Kollaps-<span>o</span>-mat</h1>
+    <div class="subtitle">Die Apokalypse im Taschenformat</div>
+  </header>
+
+  <div class="info-line">
+    <strong>Kombinieren bis zur Systemkrise</strong>
+  </div>
+
+  <div class="flipbook-wrap">
+    <div class="sticker">100 %<br>gefühlte<br>Realität</div>
+    <div class="flipbook">
+      <div class="strip" onclick="flipStrip(0)">
+        <div class="hinge"></div>
+        <span class="strip-text" id="text-0"></span>
+      </div>
+      <div class="strip" onclick="flipStrip(1)">
+        <div class="hinge"></div>
+        <span class="strip-text" id="text-1"></span>
+      </div>
+      <div class="strip" onclick="flipStrip(2)">
+        <div class="hinge"></div>
+        <span class="strip-text" id="text-2"></span>
+      </div>
+    </div>
+    <div class="strip-btns">
+      <button class="strip-btn" onclick="flipStrip(0)">↕</button>
+      <button class="strip-btn" onclick="flipStrip(1)">↕</button>
+      <button class="strip-btn" onclick="flipStrip(2)">↕</button>
+    </div>
+    <div class="flipbook-bottom-border"></div>
+  </div>
+
+  <div class="controls">
+    <button class="neue-btn" onclick="flipAll()">↻ &nbsp;Neu kollabieren</button>
+  </div>
+
+  <div class="credits">
+    <span>Ein Flipbuch</span>
+    <span>© 2026</span>
+  </div>
+
+</div>
+
+<script>
+const DATA = {
+  col0: [
+    "Die deutsche Industrie",
+    "Das Rentensystem",
+    "Die Demokratie",
+    "Der gesellschaftliche Zusammenhalt",
+    "Die Bahn",
+    "Europa",
+    "Das Gesundheitssystem",
+    "Die Mittelschicht",
+    "Der Standort Deutschland",
+    "Die deutsche Seele",
+    "Das Vertrauen der Bevölkerung",
+    "Die Energieversorgung",
+    "Die Schulen",
+    "Die Weltwirtschaft",
+    "Der öffentliche Diskurs",
+    "Das Abendland",
+    "Die CDU",
+    "Die Lieferkette von Polly Pocket",
+    "Das Patriarchat",
+    "Die westliche Werteordnung",
+    "Der Fahrgastverband Pro Bahn",
+    "Der Sicherheitsexperte bei Phoenix",
+    "Die Spargelernte",
+    "Richard David Prechts Herrenfriseur",
+    "Die Heißluftfriteusen-Industrie",
+    "Die WhatsApp-Gruppe \u201eAbi \u201898 \ud83c\udf7b\u201c",
+    "Die Feelgood-Managerin im Axel Springer Verlag",
+    "Der Achtsamkeitscoach von Friedrich Merz",
+  ],
+  col1: [
+    "steht kurz vor dem Kollaps wegen Wärmepumpenpanik",
+    "zerbricht zunehmend an ideologischen Grabenkämpfen",
+    "wird jetzt auch durch KI ersetzt",
+    "wird durch eine neue EU-Verordnung massiv destabilisiert",
+    "leidet unter einer historischen Vertrauenskrise",
+    "scheitert immer häufiger an deutscher Bürokratie",
+    "wird durch emotionale Erschöpfung nachhaltig geschwächt",
+    "kollabiert schleichend durch Personalmangel",
+    "droht an den Kommentarspalten des Internets zu zerbrechen",
+    "ist wegen einer Totaleskalation in der Kita-WhatsApp-Gruppe vier Jahre krankgemeldet",
+    "wird durch Lieferengpässe bei Kichererbsen massiv belastet",
+    "verliert wegen permanenter Krisenkommunikation jede Orientierung",
+    "gerät durch E-Scooterisierung zunehmend unter Druck",
+    "wird von immer mehr Menschen innerlich aufgegeben",
+    "taumelt wegen anhaltender Unsicherheit im Dinkelmarkt Richtung Abgrund",
+    "scheitert an einer verhängnisvollen Mischung aus Müdigkeit und Moralismus",
+    "wird systematisch von True Crime Podcasts mürbe gemacht",
+    "verliert wegen eines Softwareupdates im öffentlichen Dienst seine Handlungsfähigkeit",
+    "steht wegen der demografischen Entwicklung vor einer Zerreißprobe",
+    "wird durch den endgültigen Vertrauensverlust beim Leergutautomaten destabilisiert",
+    "steht kurz vor Herzinfarkt",
+    "wird durch den Proteinbedarf der Generation Z massiv beansprucht",
+    "wird die Grillsaison 2028 canceln",
+    "will Autofahren komplett verbieten",
+    "fordert sofort einen Hitzeschutzplan für Bürohunde",
+    "verlangt eine Außenpolitik nach den Phasen des Retro-Merkur",
+    "ist total lost",
+    "hat das Gefühl, es gibt überhaupt keinen Safe Space mehr",
+    "versteht die Leute an der Fleischtheke einfach nicht mehr",
+    "arbeitet wegen Mental Health prinzipiell nur noch an zwei Tagen pro Woche",
+    "liest überhaupt keine Nachrichten mehr",
+    "lebt emotional bereits in Portugal",
+    "hält einen weiteren Winter psychologisch kaum noch aus",
+    "hat sich beim Thema Raclettekäse unheilbar radikalisiert",
+  ],
+  col2: [
+    "Experten warnen bereits seit Jahren.",
+    "Doch die Politik schaut weiter weg.",
+    "Viele Bürger spüren das längst im Alltag.",
+    "Die Folgen wären kaum absehbar.",
+    "Davor haben Fachleute seit Langem gewarnt.",
+    "Ein Zurück scheint inzwischen kaum noch möglich.",
+    "Die Stimmung im Land droht endgültig zu kippen.",
+    "Kritiker sprechen von einem historischen Kontrollverlust.",
+    "Noch immer wird das Problem systematisch unterschätzt.",
+    "Damit steht mehr auf dem Spiel als nur Wohlstand.",
+    "Viele Kommunen sind darauf schlicht nicht vorbereitet.",
+    "Hinter vorgehaltener Hand spricht man bereits vom Kipppunkt.",
+    "Putin schaut sich das ganz genau an.",
+    "Die Nervosität in Politik und Wirtschaft wächst täglich.",
+    "Und niemand scheint wirklich einen Plan zu haben.",
+    "Manche vergleichen die Lage bereits mit den 70er-Jahren.",
+    "Was jetzt passiert, könnte unumkehrbar sein.",
+    "Die Warnsignale waren lange sichtbar.",
+    "Selbst Optimisten zeigen sich zunehmend ratlos.",
+    "Die Lage ist ernster, als viele glauben.",
+    "Was bleibt uns denn dann überhaupt noch?",
+    "Das ist der Dritte Weltkrieg.",
+    "Gute Nacht.",
+    "Da können sogar die LinkedIn-Coaches nichts mehr machen.",
+    "Das wird brutal unterschätzt.",
+    "Das ist einfach nur noch dystopisch.",
+    "Das wird eine ganze Generation traumatisieren.",
+    "Das ist Weimar mit Lastenrädern.",
+    "Da hilft auch kein Runder Tisch mehr.",
+    "Das geht weit über normale Krisenerscheinungen hinaus.",
+  ]
+};
+
+const ARRAYS = [DATA.col0, DATA.col1, DATA.col2];
+const STRIPS = 3;
+const HALF = 220;
+
+const queues  = ARRAYS.map(() => []);
+const current = Array(STRIPS).fill('');
+const busy    = Array(STRIPS).fill(false);
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function nextEntry(s) {
+  if (queues[s].length === 0) {
+    let deck = shuffle(ARRAYS[s]);
+    if (deck[0] === current[s] && deck.length > 1) deck.push(deck.shift());
+    queues[s] = deck;
+  }
+  return queues[s].shift();
+}
+
+function flipStrip(s, onDone) {
+  if (busy[s]) return;
+  busy[s] = true;
+  const el   = document.getElementById('text-' + s);
+  const next = nextEntry(s);
+
+  el.style.transition      = 'transform ' + HALF + 'ms ease-in, opacity ' + HALF + 'ms ease-in';
+  el.style.transformOrigin = 'top center';
+  el.style.transform       = 'scaleY(0)';
+  el.style.opacity         = '0';
+
+  setTimeout(function() {
+    el.textContent           = next;
+    current[s]               = next;
+    el.style.transition      = 'none';
+    el.style.transformOrigin = 'bottom center';
+    el.style.transform       = 'scaleY(0)';
+    el.style.opacity         = '0';
+    void el.offsetHeight;
+    el.style.transition = 'transform ' + HALF + 'ms ease-out, opacity ' + HALF + 'ms ease-out';
+    el.style.transform  = 'scaleY(1)';
+    el.style.opacity    = '1';
+    setTimeout(function() {
+      el.style.transition      = '';
+      el.style.transform       = '';
+      el.style.opacity         = '';
+      el.style.transformOrigin = '';
+      busy[s] = false;
+      if (onDone) onDone();
+    }, HALF + 20);
+  }, HALF + 10);
+}
+
+function flipAll() {
+  [0, 1, 2].forEach(function(s, i) {
+    setTimeout(function() { flipStrip(s); }, i * 160);
+  });
+}
+
+function init() {
+  for (let s = 0; s < STRIPS; s++) {
+    const val = nextEntry(s);
+    current[s] = val;
+    document.getElementById('text-' + s).textContent = val;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
