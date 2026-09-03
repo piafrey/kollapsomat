@@ -56,14 +56,10 @@
   }
   .info-line strong { color: var(--black); font-weight: 700; }
 
-  /* ── Flipbook container ── */
   #flipbook-container { width: 100%; position: relative; }
 
-  /* DESKTOP strips */
   .desktop-wrap { width: 100%; }
-  .flipbook-h {
-    display: flex; border: 2px solid var(--black); border-bottom: none;
-  }
+  .flipbook-h { display: flex; border: 2px solid var(--black); border-bottom: none; }
   .strip-h {
     flex: 1; min-width: 0; border-right: 2px solid var(--black);
     cursor: pointer; position: relative; height: 200px; overflow: hidden;
@@ -81,9 +77,7 @@
     font-size: clamp(11px, 1.35vw, 14px); font-weight: 400; line-height: 1.5;
     color: var(--black); text-align: center; padding: 18px 12px 12px;
   }
-  .strip-btns-h {
-    display: flex; border: 2px solid var(--black); border-top: none; border-bottom: none;
-  }
+  .strip-btns-h { display: flex; border: 2px solid var(--black); border-top: none; border-bottom: none; }
   .strip-btn-h {
     flex: 1; font-family: inherit; font-size: 15px; padding: 9px;
     border: none; border-right: 2px solid var(--black);
@@ -94,16 +88,7 @@
   .strip-btn-h:hover { background: #f2ede6; color: var(--black); }
   .strip-btn-h:active { background: var(--yellow); color: var(--black); }
   .bottom-border { width: 100%; height: 2px; background: var(--black); }
-  .sticker {
-    position: absolute; bottom: -44px; left: 0; z-index: 20;
-    background: var(--yellow); color: var(--black);
-    font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase;
-    padding: 7px 11px 6px; line-height: 1.3;
-    transform: rotate(-2deg); box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
-    pointer-events: none; white-space: nowrap;
-  }
 
-  /* MOBILE cards */
   .mobile-wrap { width: 100%; display: flex; flex-direction: column; gap: 10px; }
   .card-m {
     width: 100%; border: 2px solid var(--black);
@@ -123,16 +108,7 @@
     color: var(--black); text-align: center;
   }
   .card-btn-m { margin-top: 10px; font-size: 18px; color: #bbb; }
-  .mobile-sticker {
-    display: inline-block;
-    background: var(--yellow); color: var(--black);
-    font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase;
-    padding: 6px 10px; line-height: 1.3;
-    transform: rotate(-2deg); box-shadow: 2px 2px 0 rgba(0,0,0,0.12);
-    margin-top: 6px; align-self: flex-start;
-  }
 
-  /* Controls */
   .controls { margin-top: 56px; display: flex; justify-content: center; }
   .controls.mobile-controls { margin-top: 24px; }
   .neue-btn {
@@ -142,7 +118,7 @@
     background: var(--black); color: var(--white);
     cursor: pointer; transition: background 0.15s, border-color 0.15s;
   }
-  .neue-btn.full { width: 100%; justify-content: center; padding: 16px; font-size: 13px; }
+  .neue-btn.full { width: 100%; padding: 16px; font-size: 13px; }
   .neue-btn:hover { background: var(--red); border-color: var(--red); }
   .credits {
     width: 100%; margin-top: 44px; border-top: 1px solid var(--gray); padding-top: 14px;
@@ -344,7 +320,6 @@ function buildDesktop() {
         }).join('') +
       '</div>' +
       '<div class="bottom-border"></div>' +
-      '<div class="sticker">100 %<br>gefühlte<br>Realität</div>' +
     '</div>';
   document.getElementById('neue-btn').classList.remove('full');
   document.getElementById('controls-wrap').className = 'controls';
@@ -362,7 +337,6 @@ function buildMobile() {
           '<div class="card-btn-m">↕</div>' +
         '</div>';
       }).join('') +
-      '<div class="mobile-sticker">100 %<br>gefühlte<br>Realität</div>' +
     '</div>';
   document.getElementById('neue-btn').classList.add('full');
   document.getElementById('controls-wrap').className = 'controls mobile-controls';
